@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin
+Disallow: /couple
+Disallow: /hotesse
+Disallow: /acces/
+Disallow: /connexion
+Allow: /
+Disallow: /exemples
