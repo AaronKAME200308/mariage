@@ -92,15 +92,15 @@ function Medallion({ className = '' }: { className?: string }) {
 }
 
 /* ---------- Feuillage blanc ---------- */
-function Leaf({ x, y, r, s = 1 }: { x: number; y: number; r: number; s?: number }) {
-  return (
-    <path
-      d="M0,0 C10,-18 10,-46 0,-70 C-10,-46 -10,-18 0,0 Z"
-      fill="url(#leaf-white)"
-      transform={`translate(${x} ${y}) rotate(${r}) scale(${s})`}
-    />
-  )
-}
+// function Leaf({ x, y, r, s = 1 }: { x: number; y: number; r: number; s?: number }) {
+//   return (
+//     <path
+//       d="M0,0 C10,-18 10,-46 0,-70 C-10,-46 -10,-18 0,0 Z"
+//       fill="url(#leaf-white)"
+//       transform={`translate(${x} ${y}) rotate(${r}) scale(${s})`}
+//     />
+//   )
+// }
 
 function Foliage({ flip = false, className = '' }: { flip?: boolean; className?: string }) {
   return (

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
-import { Camera, Check, Church, Clock, Copy, ExternalLink, MapPin, Navigation, PartyPopper } from 'lucide-react'
+import { Camera, Check, Clock, Copy, ExternalLink, MapPin, Navigation, PartyPopper } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 /* ================================================================
