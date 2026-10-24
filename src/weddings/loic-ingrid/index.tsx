@@ -14,6 +14,7 @@ import Cadeaux from './sections/Cadeaux'
 import LivreOr from './sections/LivreOr'
 import Pied from './sections/Pied'
 import Lieu from './sections/Lieux';
+import Tenue from './sections/Tenue';
 
 export default function Page() {
   return (
@@ -24,6 +25,7 @@ export default function Page() {
       <Programme />
       <Lieu />
       <Galerie />
+      <Tenue />
       <Rsvp />
       <Cadeaux />
       <LivreOr />
