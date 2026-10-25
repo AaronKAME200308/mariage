@@ -4,7 +4,7 @@
  * puis éditez src/weddings/<slug>/. Chaque section est un fichier dans sections/ :
  * réordonnez, supprimez ou ajoutez des sections simplement ici.
  */
-import { Intro, Musique } from '../_kit'
+import { Intro, Musique, useSite } from '../_kit'
 import Hero from './sections/Hero'
 import Histoire from './sections/Histoire'
 import Programme from './sections/Programme'
@@ -17,10 +17,11 @@ import Lieu from './sections/Lieux';
 import Tenue from './sections/Tenue';
 
 export default function Page() {
+  const { wedding, names } = useSite()
   return (
-    <>
+    <div className="loic-ingrid">
       <Intro />
-      <Hero />
+      <Hero wedding={wedding} names={names} />
       <Histoire />
       <Programme />
       <Lieu />
@@ -31,6 +32,6 @@ export default function Page() {
       <LivreOr />
       <Pied />
       <Musique />
-    </>
+    </div>
   )
 }

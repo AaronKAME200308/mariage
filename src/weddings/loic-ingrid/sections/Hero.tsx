@@ -1,16 +1,40 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { ChevronDown, Menu, X } from 'lucide-react'
+import { publicUrl } from '@/lib/storage'
+import type { PublicWedding } from '@/types/domain'
 
-const weddingDate = new Date('2027-06-19T15:00:00+02:00').getTime()
+/* ================================================================
+   DONNÉES : Supabase (reçues en paramètres depuis index.tsx)
+   Prénoms, date et fuseau du mariage, photo du hero : fiche du mariage dans l'admin.
+   Les textes d'accroche ci-dessous restent écrits ici.
+   ================================================================ */
+/** Photo de secours si aucune photo n'est enregistrée dans la fiche du mariage. */
+const PHOTO_PAR_DEFAUT = '/LoicIngride/loic-ingride.png'
+
+/** « 19 juin 2027 », dans le fuseau du mariage. */
+function dateCourte(iso: string | null | undefined, tz?: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz }).format(d)
+}
+
+/** « 19 · 06 · 2027 » */
+function dateRail(iso: string | null, tz: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: tz })
+    .format(d)
+    .replace(/\//g, ' · ')
+}
 
 /* ---------- Styles blancs (dégradés) réutilisables ---------- */
 const whiteText =
   'bg-[linear-gradient(180deg,#ffffff_0%,#f2f2f2_40%,#b5b5b5_100%)] bg-clip-text text-transparent'
 const whiteBg = 'bg-[linear-gradient(135deg,#ffffff_0%,#e6e6e6_45%,#a0a0a0_100%)]'
 
-function getTimeLeft() {
+function getTimeLeft(weddingDate: number) {
   const difference = Math.max(weddingDate - Date.now(), 0)
 
   return {
@@ -21,15 +45,15 @@ function getTimeLeft() {
   }
 }
 
-function Countdown() {
+function Countdown({ weddingDate }: { weddingDate: number }) {
   // Valeurs à zéro au premier rendu pour éviter l'erreur d'hydratation
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
   useEffect(() => {
-    setTimeLeft(getTimeLeft())
-    const interval = window.setInterval(() => setTimeLeft(getTimeLeft()), 1000)
+    setTimeLeft(getTimeLeft(weddingDate))
+    const interval = window.setInterval(() => setTimeLeft(getTimeLeft(weddingDate)), 1000)
     return () => window.clearInterval(interval)
-  }, [])
+  }, [weddingDate])
 
   const units = [
     ['Jours', timeLeft.days],
@@ -60,9 +84,9 @@ function Countdown() {
 }
 
 /* ---------- Médaillon circulaire (comme le logo W.A de la maquette) ---------- */
-function Medallion({ className = '' }: { className?: string }) {
+function Medallion({ className = '', names, date, initials }: { className?: string; names: string; date: string; initials: string }) {
   return (
-    <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Loïc et Ingrid, 19 juin 2027">
+    <svg viewBox="0 0 200 200" className={className} role="img" aria-label={`${names}, ${date}`}>
       <defs>
         <linearGradient id="white-ring" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#ffffff" />
@@ -73,7 +97,7 @@ function Medallion({ className = '' }: { className?: string }) {
       </defs>
       <text fill="url(#white-ring)" fontSize="13" letterSpacing="4.2" className="font-serif uppercase">
         <textPath href="#ring-path" startOffset="0">
-          Loïc &amp; Ingrid · 19 juin 2027 · Royal Ascot ·
+          {`${names} · ${date} · Royal Ascot ·`}
         </textPath>
       </text>
       <text
@@ -85,7 +109,7 @@ function Medallion({ className = '' }: { className?: string }) {
         letterSpacing="2"
         className="font-serif"
       >
-        L&amp;I
+        {initials}
       </text>
     </svg>
   )
@@ -144,11 +168,20 @@ const navLinks = [
   { href: '#rsvp', label: 'RSVP' },
 ]
 
-export default function Page() {
+/**
+ * Données reçues de la page (index.tsx) : `wedding` et `names` viennent de Supabase via useSite().
+ * Rien d'autre à importer : tout le reste de la hero est dans ce fichier.
+ */
+export default function Hero({ wedding, names }: { wedding: PublicWedding['wedding']; names: string }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
+  const dateTexte = dateCourte(wedding.wedding_date, wedding.timezone)
+  const dateMs = wedding.wedding_date ? new Date(wedding.wedding_date).getTime() : NaN
+  const initiales = `${wedding.partner_one_name.trim().charAt(0)}&${wedding.partner_two_name.trim().charAt(0)}`.toUpperCase()
+  const photo = publicUrl('image', wedding.hero_image_path) ?? PHOTO_PAR_DEFAUT
+
   return (
-    <main className="min-h-screen bg-[#111111] text-[#f4f0e8]">
+    <div id="haut" className="bg-[#111111] text-[#f4f0e8]">
       {/* Cadre blanc en dégradé */}
       <div className={`p-[8px] sm:p-[12px] ${whiteBg}`}>
         <section className="relative isolate flex min-h-[calc(100svh-16px)] flex-col overflow-hidden bg-[#0b0b0b] sm:min-h-[calc(100svh-24px)]">
@@ -156,7 +189,7 @@ export default function Page() {
           <div
             aria-hidden="true"
             className="absolute inset-0 -z-20 bg-cover bg-center opacity-90"
-            style={{ backgroundImage: "url('/LoicIngride/loic-ingride.png')" }}
+            style={{ backgroundImage: `url("${photo}")` }}
           />
           <div
             aria-hidden="true"
@@ -166,7 +199,7 @@ export default function Page() {
           {/* ---------- En-tête ---------- */}
           <header className="relative z-30 flex items-center justify-between px-5 py-5 sm:px-10 sm:py-7 lg:px-16">
             <a href="#accueil" className={`font-serif text-xl tracking-[0.2em] ${whiteText}`}>
-              L &amp; I
+              {initiales.charAt(0)} &amp; {initiales.charAt(2)}
             </a>
 
             <nav
@@ -220,7 +253,7 @@ export default function Page() {
             <div className="flex flex-col items-center gap-4 rounded-full border border-[#e6e6e6]/50 bg-[#0b0b0b]/60 px-3 py-6 backdrop-blur-sm">
               <span className="h-10 w-px bg-[#e6e6e6]/60" />
               <span className={`font-serif text-xs tracking-[0.35em] [writing-mode:vertical-rl] ${whiteText}`}>
-                19 · 06 · 2027
+                {dateRail(wedding.wedding_date, wedding.timezone)}
               </span>
               <span className="h-10 w-px bg-[#e6e6e6]/60" />
             </div>
@@ -231,10 +264,10 @@ export default function Page() {
             id="accueil"
             className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-28 pt-4 text-center sm:pb-32"
           >
-            <Medallion className="mb-5 h-24 w-24 sm:h-28 sm:w-28 lg:absolute lg:left-24 lg:top-[14%] lg:mb-0 lg:h-44 lg:w-44 xl:left-28 xl:h-52 xl:w-52" />
+            <Medallion names={names} date={dateTexte} initials={initiales} className="mb-5 h-24 w-24 sm:h-28 sm:w-28 lg:absolute lg:left-24 lg:top-[14%] lg:mb-0 lg:h-44 lg:w-44 xl:left-28 xl:h-52 xl:w-52" />
 
             <p className={`font-serif text-xs uppercase tracking-[0.35em] sm:text-sm sm:tracking-[0.5em] ${whiteText}`}>
-              Loïc &amp; Ingrid vous invitent à leur
+              {names} vous invitent à leur
             </p>
 
             <h1
@@ -244,7 +277,7 @@ export default function Page() {
             </h1>
 
             <p className="mt-2 font-serif text-lg italic text-white/90 sm:text-2xl">
-              le 19 juin 2027, en noir et blanc
+              {dateTexte ? `le ${dateTexte}, en noir et blanc` : 'en noir et blanc'}
             </p>
 
             <p className="mt-6 max-w-xl text-sm leading-7 text-white/75 sm:text-base sm:leading-8">
@@ -252,7 +285,7 @@ export default function Page() {
             </p>
 
             <div className="mt-9 w-full sm:mt-10">
-              <Countdown />
+              {Number.isNaN(dateMs) ? null : <Countdown weddingDate={dateMs} />}
             </div>
 
             <div className="mt-10 flex flex-col items-center gap-4 sm:mt-12 sm:flex-row">
@@ -293,15 +326,6 @@ export default function Page() {
         </section>
       </div>
 
-      <section
-        id="histoire"
-        className="flex min-h-[45vh] items-center justify-center bg-[#f4f0e8] px-6 py-24 text-center text-[#111111]"
-      >
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-[#6b6b6b]">À suivre</p>
-          <h2 className="mt-4 font-serif text-4xl sm:text-6xl">Notre histoire commence ici.</h2>
-        </div>
-      </section>
-    </main>
+    </div>
   )
 }

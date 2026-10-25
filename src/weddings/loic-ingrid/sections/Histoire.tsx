@@ -770,17 +770,6 @@ export default function HistoirePage() {
       <style>{css}</style>
       <GradientDefs />
 
-      {/* Barre du haut */}
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center justify-between bg-gradient-to-b from-[#0b0b0b] to-transparent px-5 py-4 sm:px-10">
-        <a
-          href="/"
-          className="pointer-events-auto flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/80 transition-colors hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-white"
-        >
-          <ArrowLeft size={14} aria-hidden="true" /> Accueil
-        </a>
-        <span className={`font-serif text-lg tracking-[0.2em] ${whiteText}`}>L &amp; I</span>
-      </header>
-
       {/* Introduction */}
       <section
         ref={introRef}

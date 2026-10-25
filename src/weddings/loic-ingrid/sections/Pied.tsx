@@ -1,5 +1,3 @@
-'use client'
-
 import { Fragment, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useSite } from '../../_kit'
@@ -19,8 +17,29 @@ const links = [
   { href: '#rsvp', label: 'RSVP' },
 ]
 
-const WEDDING = new Date('2027-06-19T15:00:00+02:00').getTime()
 const DAY = 1000 * 60 * 60 * 24
+
+/* ================================================================
+   DONNÉES : Supabase (via useSite)
+   Prénoms, date et fuseau du mariage : fiche du mariage dans l'admin.
+   Les textes ci-dessus et ci-dessous restent écrits dans ce fichier.
+   ================================================================ */
+function formater(iso: string | null | undefined, tz: string | undefined, o: Intl.DateTimeFormatOptions): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return new Intl.DateTimeFormat('fr-FR', { ...o, timeZone: tz }).format(d)
+}
+/** « 19 juin 2027 » */
+const dateCourte = (iso: string | null | undefined, tz?: string) => formater(iso, tz, { day: 'numeric', month: 'long', year: 'numeric' })
+/** « Samedi 19 juin 2027 » */
+const dateLongue = (iso: string | null | undefined, tz?: string) => {
+  const t = formater(iso, tz, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : ''
+}
+/** « 19 · 06 · 2027 » */
+const dateRail = (iso: string | null | undefined, tz?: string) =>
+  formater(iso, tz, { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' · ')
 
 /* ================================================================
    STYLES (préfixe pd- pour ne rien mélanger avec le reste du site)
@@ -207,15 +226,15 @@ function Checker({ className = '' }: { className?: string }) {
 /* ================================================================
    COMPTE À REBOURS EN JOURS
    ================================================================ */
-function DaysLeft() {
+function DaysLeft({ weddingMs }: { weddingMs: number }) {
   const [days, setDays] = useState<number | null>(null)
 
   useEffect(() => {
-    const update = () => setDays(Math.ceil((WEDDING - Date.now()) / DAY))
+    const update = () => setDays(Math.ceil((weddingMs - Date.now()) / DAY))
     update()
     const id = window.setInterval(update, 60 * 1000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [weddingMs])
 
   if (days === null) return <div className="h-[5.5rem]" aria-hidden="true" />
 
@@ -252,11 +271,13 @@ function DaysLeft() {
    PIED DE PAGE
    ================================================================ */
 export default function Pied() {
-  const { names } = useSite()
+  const { names, wedding } = useSite()
   const [ref, inView] = useInView<HTMLElement>(0.1)
 
   const label = String(names)
-  const ring = `${label} · 19 juin 2027 · Royal Ascot ·`
+  const dateTexte = dateCourte(wedding.wedding_date, wedding.timezone)
+  const weddingMs = wedding.wedding_date ? new Date(wedding.wedding_date).getTime() : NaN
+  const ring = `${label} · ${dateTexte} · Royal Ascot ·`
   const ringSize = Math.min(13, Math.max(8, (470 / ring.length - 2.6) / 0.72))
   const year = new Date().getFullYear()
 
@@ -293,7 +314,7 @@ export default function Pied() {
                     </span>
                     <Diamond className="text-[#111]" />
                     <span className="px-6 font-serif text-sm uppercase tracking-[0.35em]" style={heading}>
-                      19 · 06 · 2027
+                      {dateRail(wedding.wedding_date, wedding.timezone)}
                     </span>
                     <Diamond className="text-[#111]" />
                     <span className="px-6 font-serif text-sm italic uppercase tracking-[0.35em] text-[#111]/60" style={heading}>
@@ -390,7 +411,7 @@ export default function Pied() {
             className="pd-rv mt-6 text-xs uppercase tracking-[0.4em] text-white/80 sm:text-sm"
             style={vars({ '--d': '0.7s' })}
           >
-            Samedi 19 juin 2027
+            {dateLongue(wedding.wedding_date, wedding.timezone)}
           </p>
           <p
             className="pd-rv mt-4 max-w-md text-sm leading-7 text-white/60 sm:text-base sm:leading-8"
@@ -400,7 +421,7 @@ export default function Pied() {
           </p>
 
           <div className="pd-rv mt-9" style={vars({ '--d': '1s' })}>
-            <DaysLeft />
+            {Number.isNaN(weddingMs) ? null : <DaysLeft weddingMs={weddingMs} />}
           </div>
 
           {/* Navigation */}
